@@ -1,6 +1,7 @@
 import requests
 import pickle
 import datetime
+import os
 
 
 class ItemParser:
@@ -22,10 +23,10 @@ class ItemParser:
         self.change_id = self.current_stashes["next_change_id"]
 
     def update_item_database(self, league="Legacy"):
-        self.item_database += [[item for item in stash["items"] if "note" in item and item["league"] == league]
-                               for stash in self.current_stashes["stashes"]]
+        self.item_database += [[item for item in stash["items"] if "note" in item and item[
+            "league"] == league] for stash in self.current_stashes["stashes"]]
 
-    def cycle(self):
+    def cycle_stashes(self):
         self.get_new_stashes()
         self.update_change_id()
         self.update_item_database()
@@ -34,19 +35,26 @@ class ItemParser:
         return len(self.item_database)
 
     def pickle_database(self):
-        with open("./items/item_database_" + "a", "wb") as file:
+        pickle_num = max([0] +
+                         [int(file.partition(".")[0]) for file in os.listdir("./items") if file.partition(".")[0].isdigit()]) + 1
+        with open("./items/" + str(pickle_num) + ".pickle", "wb") as file:
             pickle.dump(self.item_database, file)
 
     def populate_item_database(self, size=100000):
         while self.database_size() < size:
             try:
-                self.cycle()
+                self.cycle_stashes()
                 print(self.database_size())
             except:
                 self.pickle_database()
-        self.pickle_database()
         print("Done!")
+
+    def reset_database(self):
+        self.item_database = []
 
 if __name__ == "__main__":
     new_parser = ItemParser()
-    new_parser.populate_item_database()
+    while True:
+        new_parser.populate_item_database(10000)
+        new_parser.pickle_database()
+        new_parser.reset_database()
