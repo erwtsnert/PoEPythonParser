@@ -1,5 +1,6 @@
 import requests
 import pickle
+import datetime
 
 
 class ItemParser:
@@ -33,13 +34,19 @@ class ItemParser:
         return len(self.item_database)
 
     def pickle_database(self):
-        with open("./items/item_database.pickle", "wb") as file:
+        with open("./items/item_database_" + "a", "wb") as file:
             pickle.dump(self.item_database, file)
+
+    def populate_item_database(self, size=100000):
+        while self.database_size() < size:
+            try:
+                self.cycle()
+                print(self.database_size())
+            except:
+                self.pickle_database()
+        self.pickle_database()
+        print("Done!")
 
 if __name__ == "__main__":
     new_parser = ItemParser()
-    while len(new_parser.item_database) < 100000:
-        new_parser.cycle()
-        print(new_parser.database_size())
-    new_parser.pickle_database()
-    print("Done!")
+    new_parser.populate_item_database()
